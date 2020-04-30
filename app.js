@@ -5,12 +5,14 @@ var KEY_LEFT = 37,KEY_UP=38,KEY_RIGHT=39,KEY_DOWN=40,KEY_ENTER=13;
 var pause=false;
 var gameover=true;
 var pressing = [];
-var k = 1;
-var speed =0;
+// var k = 1;
+// var speed =0;
 var lastPress = null;
 var wall=[];
 var lava=[];
 var onGround=true;
+var cam=null;
+var worldWidth=0,worldHeight=0;
 var map0 =[ 
     [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
     [1,2,2,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
@@ -49,6 +51,9 @@ function setMap(map,blocksize){
         }
 
     }
+    worldWidth=columns * blocksize;
+    worldHeight=rows * blocksize;
+
 }
 function Rectangle2d(x,y,width,height,createFromTopLeft){
     this.width = (width === undefined)?0:width;
@@ -110,9 +115,11 @@ Rectangle2d.prototype = {
                 this.top < rect.bottom)
         }
     },
-    fill: function(ctx){
+    fill: function(ctx,cam){
         if(ctx !== undefined){
-            ctx.fillRect(this.left,this.top,this.width,this.height);
+            if(cam!==undefined){
+            ctx.fillRect(this.left - cam.x,this.top - cam.y ,this.width,this.height);
+            }
         }
     },
     stroke : function(ctx){
@@ -121,11 +128,31 @@ Rectangle2d.prototype = {
         }
     }
 }
+function Camera(x,y){
+    this.x = (x===undefined)?0:x;
+    this.y = (y===undefined)?0:y;
+}
+Camera.prototype ={
+    focus: function(x,y){
+        this.x = x - canvas.width/2
+        this.y = y - canvas.height/2;
+        if(this.x < 0 ){
+            this.x=0;
+        }else if(this.x+canvas.width > worldWidth){
+            this.x = worldWidth - canvas.width;
+        }
+        if(this.y < 0 ){
+            this.y=0;
+        }else if(this.y+canvas.height > worldHeight){
+            this.y = worldHeight - canvas.height;
+        }
+    }
+}
 function reset(){
     player.vx=0;
     player.vy=0;
-    player.x=40;
-    player.y=140;
+    player.left=40;
+    player.top=40;
     gameover=false;
 }
 function enableInput(){
@@ -155,15 +182,16 @@ function paint(ctx){
     ctx.fillStyle='#000';
     ctx.fillRect(0,0,canvas.width,canvas.height);
     ctx.fillStyle='#fff'
-    player.fill(ctx);
+    player.fill(ctx,cam);
     ctx.fillStyle='#999'
     for(var i=0; i<wall.length;i++){
-    wall[i].fill(ctx);
+    wall[i].fill(ctx,cam);
     }
     ctx.fillStyle='#f00'
     for(i=0;i<lava.length;i++){
-        lava[i].fill(ctx)
+        lava[i].fill(ctx,cam)
     }
+    // ctx.fillRect(cam.x,cam.y,10,10);
     if(pause){
         ctx.textAlign='center'
         ctx.fillStyle='#0f0';
@@ -184,6 +212,7 @@ function act(deltaTime){
             pause=true;
             lastPress=null;
         }
+        cam.focus(player.x,player.y)
         if(pressing[KEY_LEFT]){
             if(player.vx>-10){
                 player.vx-=1;
@@ -232,10 +261,10 @@ function act(deltaTime){
                      player.vy=0;
                  }
              }
-             if(player.bottom>canvas.height){
-             player.bottom=canvas.height
-             speed =0;
-             }
+            //  if(player.bottom>canvas.height){
+            //  player.bottom=canvas.height
+            //  speed =0;
+            //  }
              for(i=0;i<lava.length;i++){
                  if(player.intersects(lava[i])){
                      gameover=true;
@@ -255,7 +284,8 @@ function init(){
         canvas.width = 300;
         canvas.height= 200;
 
-        player = new Rectangle2d(150,120,10,10,true);
+        player = new Rectangle2d(40,40,10,10,true);
+        cam = new Camera()
         // wall.push(new Rectangle2d(150,190,10,10,true));
         enableInput();
         setMap(map0,10);
