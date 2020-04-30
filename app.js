@@ -1,4 +1,6 @@
+/*jslint bitwise: true, es5: true */
 (function(window,undefined){
+    'use strict';
 var canvas=null,ctx=null;
 var player = null;
 var KEY_LEFT = 37,KEY_UP=38,KEY_RIGHT=39,KEY_DOWN=40,KEY_ENTER=13;
@@ -7,34 +9,25 @@ var gameover=true;
 var pressing = [];
 // var k = 1;
 // var speed =0;
+var spritesheet = new Image();
 var lastPress = null;
 var wall=[];
 var lava=[];
 var onGround=true;
 var cam=null;
 var worldWidth=0,worldHeight=0;
-var map0 =[ 
-    [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
-    [1,2,2,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
-    [1,2,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
-    [1,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
-    [1,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,0,0,1],
-    [1,0,0,0,0,0,0,0,0,1,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0,0,1,0,0,1],
-    [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,1,0,0,1],
-    [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,1,0,0,1],
-    [1,0,0,0,0,0,2,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,2,2,0,0,1,0,0,1],
-    [0,0,0,0,0,0,2,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,2,2,0,0,1,0,0,0],
-    [0,0,0,0,0,0,2,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,2,2,0,0,1,0,0,0],
-    [1,0,0,0,0,0,2,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,2,2,0,0,1,0,0,1],
-    [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,1,0,0,1],
-    [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,1,0,0,1],
-    [1,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,0,0,0,1,0,0,0,0,0,0,1,0,0,1],
-    [1,0,0,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,1,1,1,0,0,1],
-    [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,1],
-    [1,2,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,1],
-    [1,2,2,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,1],
-    [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]
-];
+var map0 =[            
+    [2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2],            
+    [2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2],            
+    [2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2],            
+    [2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2],            
+    [2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3, 3, 3, 0, 0, 2],            
+    [2, 0, 0, 3, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3, 3, 3, 0, 0, 2],            
+    [2, 0, 0, 0, 0, 3, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2],            
+    [2, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2],            
+    [2, 2, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2],            
+    [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
+        ];
  
 //setMap
 function setMap(map,blocksize){
@@ -58,6 +51,7 @@ function setMap(map,blocksize){
 function Rectangle2d(x,y,width,height,createFromTopLeft){
     this.width = (width === undefined)?0:width;
     this.height = (height === undefined)?this.width:height;
+    this.scale = { x:1, y:1};
         if(createFromTopLeft){
             this.left = (x === undefined)?0:x;
             this.top = (y ===undefined)?0:y;
@@ -126,6 +120,26 @@ Rectangle2d.prototype = {
         if(ctx !== undefined){
             ctx.strokeRect(this.left,this.top,this.width,this.height);
         }
+    },
+    drawImageArea : function (ctx,cam,img,sx,sy,sw,sh){
+        if(ctx!== undefined){
+            if(img.width){
+                ctx.save()
+                if(cam!==undefined){
+                    ctx.translate(this.x-cam.x,this.y-cam.y);
+                }else{
+                    ctx.translate(this.x,this.y);
+                }
+                ctx.scale(this.scale.x,this.scale.y);
+                ctx.drawImage(img,sx,sy,sw,sh,-this.width/2,-this.height/2,this.width,this.height)
+                ctx.restore()
+            }else{
+                if(cam !== undefined){
+                    ctx.strokeRect(this.left - cam.x ,this.top - cam.y ,this.width,this.height);
+                }else{
+                    ctx.strokeRect(this.left,this.top,this.width,this.height);                }
+            }
+        }
     }
 }
 function Camera(x,y){
@@ -151,8 +165,8 @@ Camera.prototype ={
 function reset(){
     player.vx=0;
     player.vy=0;
-    player.left=40;
-    player.top=40;
+    player.left=48;
+    player.top=16;
     gameover=false;
 }
 function enableInput(){
@@ -182,7 +196,7 @@ function paint(ctx){
     ctx.fillStyle='#000';
     ctx.fillRect(0,0,canvas.width,canvas.height);
     ctx.fillStyle='#fff'
-    player.fill(ctx,cam);
+    player.drawImageArea(ctx,cam,spritesheet,16,16,16,32);
     ctx.fillStyle='#999'
     for(var i=0; i<wall.length;i++){
     wall[i].fill(ctx,cam);
@@ -214,6 +228,8 @@ function act(deltaTime){
         }
         cam.focus(player.x,player.y)
         if(pressing[KEY_LEFT]){
+            //Changing the image scale
+            player.scale.x = -1
             if(player.vx>-10){
                 player.vx-=1;
             }
@@ -221,6 +237,8 @@ function act(deltaTime){
          player.vx+=1
          }
         if(pressing[KEY_RIGHT]){
+            //Changing the image scale
+            player.scale.x = 1
          if(player.vx<10){
              player.vx+=1;
          }
@@ -229,7 +247,7 @@ function act(deltaTime){
         }
          player.x+=player.vx    
 
-         player.vy +=2;
+         player.vy +=1;
          if(player.vy>15){
              player.vy=15;
          }
@@ -281,20 +299,21 @@ function act(deltaTime){
 function init(){
         canvas = document.getElementById('canvas');
         ctx = canvas.getContext('2d');
-        canvas.width = 300;
-        canvas.height= 200;
+        canvas.width = 240;
+        canvas.height= 160;
 
-        player = new Rectangle2d(40,40,10,10,true);
-        cam = new Camera()
+        player = new Rectangle2d(48,16,16,32,true);
+        cam = new Camera();
+        spritesheet.src = 'assets/platformer-sprites.png'
         // wall.push(new Rectangle2d(150,190,10,10,true));
         enableInput();
-        setMap(map0,10);
+        setMap(map0,16);
         run()
         repaint()
 }
 
 
-    window.addEventListener('load',init(),false)
+    window.addEventListener('load',init,false)
 
 
 }(window))
