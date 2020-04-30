@@ -14,6 +14,7 @@ var lastPress = null;
 var wall=[];
 var lava=[];
 var onGround=true;
+var elapsed =0;
 var cam=null;
 var worldWidth=0,worldHeight=0;
 var map0 =[            
@@ -32,15 +33,21 @@ var map0 =[
 //setMap
 function setMap(map,blocksize){
     var row=0,rows=0,col=0,columns=0;
+    var rect = null;
     for(row=0,rows=map.length;row<rows;row++){
         for(col=0,columns=map[row].length;col<columns;col++){
-            if(map[row][col]===1){
-                wall.push(new Rectangle2d(col*blocksize,row*blocksize,blocksize,blocksize,true))
-            }else{
-                if(map[row][col]===2){
-                    lava.push(new Rectangle2d(col*blocksize,row*blocksize,blocksize,blocksize,true))
-                }
+            if(map[row][col]>0){
+                rect = new Rectangle2d(col * blocksize, row*blocksize,blocksize,blocksize,true);
+                rect.type=map[row][col];
+                wall.push(rect);
             }
+            // if(map[row][col]===1){
+            //     wall.push(new Rectangle2d(col*blocksize,row*blocksize,blocksize,blocksize,true))
+            // }else{
+            //     if(map[row][col]===2){
+            //         lava.push(new Rectangle2d(col*blocksize,row*blocksize,blocksize,blocksize,true))
+            //     }
+            // }
         }
 
     }
@@ -68,6 +75,7 @@ Rectangle2d.prototype = {
     height : 0,
     vx:0,
     vy:0,
+    type:0,
 
     get x(){
         return (this.left +this.width/2);
@@ -196,15 +204,22 @@ function paint(ctx){
     ctx.fillStyle='#000';
     ctx.fillRect(0,0,canvas.width,canvas.height);
     ctx.fillStyle='#fff'
-    player.drawImageArea(ctx,cam,spritesheet,16,16,16,32);
+    if(!onGround){
+        player.drawImageArea(ctx,cam,spritesheet,16,16,16,32);
+    }else if(player.vx ===0){
+        player.drawImageArea(ctx,cam,spritesheet,0,16,16,32);
+        }else{
+            player.drawImageArea(ctx,cam,spritesheet,(~~(elapsed*10)%2)*16,16,16,32);
+        }
+    
     ctx.fillStyle='#999'
     for(var i=0; i<wall.length;i++){
-    wall[i].fill(ctx,cam);
+    wall[i].drawImageArea(ctx,cam,spritesheet,(wall[i].type -1) * 16,0,16,16);
     }
-    ctx.fillStyle='#f00'
-    for(i=0;i<lava.length;i++){
-        lava[i].fill(ctx,cam)
-    }
+    // ctx.fillStyle='#f00'
+    // for(i=0;i<lava.length;i++){
+    //     lava[i].fill(ctx,cam)
+    // }
     // ctx.fillRect(cam.x,cam.y,10,10);
     if(pause){
         ctx.textAlign='center'
@@ -288,6 +303,10 @@ function act(deltaTime){
                      gameover=true;
                      pause=true;
                  }
+             }
+             elapsed+=deltaTime
+             if(elapsed>3600){
+                 elapsed-=3600;
              }
          }
         if(lastPress===KEY_ENTER){
