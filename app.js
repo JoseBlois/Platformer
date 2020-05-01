@@ -268,6 +268,10 @@ function act(deltaTime){
          }
          if(onGround&&lastPress===KEY_UP){
              player.vy=-15;
+         }else if(pressing[KEY_UP]){
+             if(player.vy>5){
+                player.vy-=1;
+             }
          }
 
         for(var i = 0; i<wall.length;i++){
